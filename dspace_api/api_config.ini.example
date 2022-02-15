@@ -1,0 +1,13 @@
+[GENERAL]
+protocol=https
+hostname=yourserver.com
+api_root: ${protocol}://${hostname}/rest
+
+[LOGIN]
+username=your.email@example.com
+password=yourpasswd
+endpoint=/login
+# method: POST
+
+[CONNECTION]
+

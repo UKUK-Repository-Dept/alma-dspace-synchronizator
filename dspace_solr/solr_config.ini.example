@@ -1,0 +1,3 @@
+[GENERAL]
+hostname = http://localhost:1234/solr/
+core = search
