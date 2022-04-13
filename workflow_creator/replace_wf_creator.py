@@ -11,5 +11,5 @@ class ReplaceWorkflowCreator(WorkflowCreator):
     way the Creator can stay independent of concrete product classes.
     """
 
-    def factory_method(self, ds_api, ds_solr, config) -> Workflow:
-        return ReplaceWorkflow(ds_api, ds_solr, config)
+    def factory_method(self, ds_api, ds_solr, config, args) -> Workflow:
+        return ReplaceWorkflow(ds_api, ds_solr, config, args)
