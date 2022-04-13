@@ -1,3 +1,6 @@
+# SPECIFIC FOR THIS PROJECT
+mapfile_test/
+
 # no config files
 *.ini
 
