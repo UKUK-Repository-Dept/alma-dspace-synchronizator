@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
 import typing
+import logging
 if typing:
     import dspace_api, dspace_solr, configparser, argparse
 
@@ -16,6 +17,7 @@ class Workflow(ABC):
         self.__gathered_docs = list()
         self.__mapfile_csv_list = list()
         self.__mapfile_csv_fieldnames = list()
+        self.__log = logging.getLogger(__name__)
 
     @property
     def args(self) -> argparse:
@@ -56,6 +58,10 @@ class Workflow(ABC):
     @mapfile_csv_fieldnames.setter
     def mapfile_csv_fieldnames(self, value):
         self.__mapfile_csv_fieldnames = value
+
+    @property
+    def log(self):
+        return self.__log
 
     @abstractmethod
     def find_input_file(self):

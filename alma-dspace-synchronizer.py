@@ -8,6 +8,8 @@ from __future__ import annotations
 import argparse
 import dspace_api as ds_api
 import dspace_solr as ds_solr
+import logging
+import logging.config
 
 from workflow_creator.replace_wf_creator import ReplaceWorkflowCreator
 from workflow_creator.add_missing_wf_creator import AddMissingWorkflowCreator
@@ -30,53 +32,60 @@ def do_test(dsapi: dspace_api, solr: dspace_solr, config, args: argparse):
 
     try:
         if args.mode == 1:
-            print("Mode is set to 1 - replace Aleph sysno")
+            log.info("Mode is set to 1 - replace Aleph sysno")
         elif args.mode == 2:
-            print("Mode is set to 2 - add missing ALMA ID")
+            log.info("Mode is set to 2 - add missing ALMA ID")
         else:
             raise Exception("Invalid value of argument -m (mode): " + args.mode)
     except Exception as e:
+        log.error(e, exc_info=True)
         raise e
 
     try:
         if args.config is None:
-            print("No custom config file provided. Using default config.")
+            log.info("No custom config file provided. Using default config.")
             app_config.read('./config.ini')
         else:
-            print("Using custom config at {}".format(args.config))
+            log.info("Using custom config at {}".format(args.config))
             app_config.read(args.config)
     except Exception as e:
+        log.error(e, exc_info=True)
         raise e
 
     try:
         if args.limit is None:
-            print("No limit for max processed docs is set. All relevant docs found will be processed.")
+            log.info("No limit for max processed docs is set. All relevant docs found will be processed.")
         else:
-            print("Limit of max processed docs set to {}. Only first {} relevant docs found will be processed.")
+            log.info("Limit of max processed docs set to {0}. Only first {0} relevant docs found will be processed.".format(
+                args.limit))
     except Exception as e:
+        log.error(e, exc_info=True)
         raise e
 
     try:
-        print("Testing app config: {}".format(config.get('MAPFILE','location')))
+        log.debug("Testing app config: {}".format(config.get('MAPFILE','location')))
     except Exception as e:
+        log.error(e, exc_info=True)
         raise e
     
     try:
-        print("Testing DSpace API: JSESSIONID = {}".format(dsapi.cookie))
+        log.debug("Testing DSpace API: JSESSIONID = {}".format(dsapi.cookie))
     except Exception as e:
+        log.error(e, exc_info=True)
         raise e
 
     try:
-        print("Pinging solr using the 'test' module of ds_solr: {}".format(solr.test.test_solr(ds_solr.solr)))
-        print("Testing querying solr:")
+        log.debug("Pinging solr using the 'test' module of ds_solr: {}".format(solr.test.test_solr(ds_solr.solr)))
+        log.debug("Testing querying solr:")
         
         results = solr.solr.search('křečci')
-        print("Saw {0} result(s).".format(len(results)))
+        log.debug("Saw {0} result(s).".format(len(results)))
 
         for result in results:
-            print("HANDLE: {}".format(result['handle']))
+            log.debug("HANDLE: {}".format(result['handle']))
     
     except Exception as e:
+        log.error(e, exc_info=True)
         raise e
     
 
@@ -88,13 +97,27 @@ def do_start(workflow_creator : workflow_creator):
 
 if __name__ == '__main__':
 
+    # create logger
+    try:
+        logging.config.fileConfig(fname='logging.ini', disable_existing_loggers=False)
+        log = logging.getLogger(__name__)
+        
+    except Exception as e:
+        logging.exception(e)
+        raise e
+
+    # create handlers
+
     args = my_parser.parse_args()
 
     app_config = ConfigParser(interpolation=ExtendedInterpolation())
 
+    
+
     try:
         do_test(ds_api, ds_solr, app_config, args)
     except Exception as e:
+        log.error(e, exc_info=True)
         raise e
 
     try:
@@ -105,9 +128,11 @@ if __name__ == '__main__':
         elif args.mode == 2:
             action(AddMissingWorkflowCreator(ds_api, ds_solr, app_config, args))
         else:
+            log.error("Invalid value of argument -m (mode):" + args.mode, exc_info=True)
             raise Exception ("Invalid value of argument -m (mode): " + args.mode)
 
     except Exception as e:
+        log.error(e, exc_info=True)
         raise e
 
     exit(0)

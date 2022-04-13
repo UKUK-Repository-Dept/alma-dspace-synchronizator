@@ -1,10 +1,13 @@
 import os
 import re
+import logging
 
 class FileUtils(object):
 
-    @staticmethod
-    def file_exists(path, is_remote=False, sftp_client=None):
+    __log = logging.getLogger(__name__)
+
+    @classmethod
+    def file_exists(cls, path, is_remote=False, sftp_client=None):
         """
         Checks if file exists on local or remote path.
         :param path: path to file
@@ -12,7 +15,8 @@ class FileUtils(object):
         :param location:
         :return: bool - True if file exists, False otherwise
         """
-        print("FileUtils: Checking if file", path, "exists.")
+        cls.__log.info(cls.__name__)
+        cls.__log.info("FileUtils: Checking if file {} exists.".format(path))
         if is_remote is True:
             if sftp_client is None:
                 raise Exception('No SFTP client reference provided. Cannot check existence of remote file.')
@@ -20,8 +24,8 @@ class FileUtils(object):
             try:
                 sftp_client.stat(path)
             except IOError as e:
-                print(e)
-                print("File", path, "not found on remote path.")
+                cls.__log.error("File", path, "not found on remote path.")
+                cls.__log.error(e, exc_info=True)
                 return False
 
             return True
@@ -34,46 +38,48 @@ class FileUtils(object):
 
 class SolrUtils(object):
 
-    @staticmethod
-    def preproces_doc_ids(doc, main_id_field_name, id_field_names: list):
+    __log = logging.getLogger(__name__)
+
+    @classmethod
+    def preproces_doc_ids(cls, doc, main_id_field_name, id_field_names: list):
         
         for field_name in id_field_names:
             if field_name not in doc.keys():
-                print("Doc {0} does not have {1}. Adding {1} with {2} value".format(doc[main_id_field_name], field_name, None))
+                cls.__log.info("Doc {0} does not have {1}. Adding {1} with {2} value".format(doc[main_id_field_name], field_name, None))
                 doc[field_name] = None
                 continue
             else: 
-                print("Doc {0} has field {1} of type {2}. Storing just as type {3}".format(doc[main_id_field_name],
+                cls.__log.info("Doc {0} has field {1} of type {2}. Storing just as type {3}".format(doc[main_id_field_name],
                 field_name, type(doc[field_name]), str.__name__))
                 doc[field_name] = doc[field_name][0]
 
         return doc
 
-    @staticmethod
-    def doc_id_count_valid(doc, id_field_names: list):
+    @classmethod
+    def doc_id_count_valid(cls, doc, id_field_names: list):
         
         for field in id_field_names:
-            print("Checking if doc {} does not have multiple occurences of field {}".format(doc['handle'], field))
+            cls.__log.info("Checking if doc {} does not have multiple occurences of field {}".format(doc['handle'], field))
             
             if field not in doc.keys():
-                print("Doc {0} does not have field {1}. Will be fixed in later processing.".format(doc['handle'], field))
+                cls.__log.info("Doc {0} does not have field {1}. Will be fixed in later processing.".format(doc['handle'], field))
                 continue
 
             if len(doc[field]) > 1:
-                print("Doc {0} has multiple fields {1}. Doc {0} is invalid.".format(doc['handle'], field))
+                cls.__log.info("Doc {0} has multiple fields {1}. Doc {0} is invalid.".format(doc['handle'], field))
                 return False
             
             else:
                 # id count is 0 or 1
-                print("Doc {0} has valid field {1} count.".format(doc['handle'], field))
+                cls.__log.info("Doc {0} has valid field {1} count.".format(doc['handle'], field))
                 return True
 
-    @staticmethod
-    def old_lis_id_found(doc, old_id_regex, id_field_names: list):
+    @classmethod
+    def old_lis_id_found(cls, doc, old_id_regex, id_field_names: list):
         
         for field in id_field_names:
-            print("Checking contents of the field {}".format(field), flush=False, end="\t")
-            print("Content of the field is: {}\n".format(doc[field]))
+            cls.__log.info("Checking contents of the field {}".format(field))
+            cls.__log.info("Content of the field is: {}\n".format(doc[field]))
             
             if doc[field] is None:
                 continue
@@ -83,8 +89,8 @@ class SolrUtils(object):
             else:
                 return False
 
-    @staticmethod
-    def get_old_id(docs_dict, lookup_fields: list):
+    @classmethod
+    def get_old_id(cls, docs_dict, lookup_fields: list):
         old_id = None
 
         for field in lookup_fields:
@@ -96,12 +102,14 @@ class SolrUtils(object):
 
 class MapfileUtils(object):
 
-    @staticmethod
-    def find_id_in_column(row, column_name, doc_identifier) -> bool:
+    __log = logging.getLogger(__name__)
+
+    @classmethod
+    def find_id_in_column(cls, row, column_name, doc_identifier) -> bool:
         
         
         if row[column_name] == doc_identifier: # identifier in mapfile list is the same as identifier in SOLR doc
-            print("{} found: {}".format(column_name, row['aleph_id']), flush=False, end="\t")
+            cls.__log.info("{} found: {}".format(column_name, row['aleph_id']))
             
             return True
         else:
