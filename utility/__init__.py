@@ -47,10 +47,12 @@ class SolrUtils(object):
         
         for field_name in id_field_names:
             if field_name not in doc.keys():
-                cls.__log.info("Doc {0} does not have {1}. Adding {1} with {2} value".format(doc[main_id_field_name], field_name, None))
+                cls.__log.info("Doc {0} does not have {1}. Adding {1} with {2} value".format(doc[main_id_field_name], 
+                field_name, None))
                 doc[field_name] = None
                 continue
-            else: 
+            
+            if type(doc[field_name]) is list:
                 cls.__log.info("Doc {0} has field {1} of type {2}. Storing just as type {3}".format(doc[main_id_field_name],
                 field_name, type(doc[field_name]), str.__name__))
                 doc[field_name] = doc[field_name][0]
@@ -145,17 +147,10 @@ class ReportingUtils(object):
             raise NotImplementedError
         
         else:
-            message = str
-            separator = ';'
-            for field in reported_fields:
-                if doc[field] is None:
-                    separator.join('')
-                else:
-                    separator.join(str(doc[field]))
-            
-            separator.join(doc['reason'])
+            doc_field_values = [doc[field] if doc[field] is not None else '' for field in reported_fields]
+            doc_field_values.append(doc['reason'])
+            message = ';'.join([value for value in doc_field_values])
         
-        message = separator
         cls.__log.debug("Report message: {}".format(message))
 
         return message
