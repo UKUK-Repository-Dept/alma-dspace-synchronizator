@@ -1,6 +1,7 @@
 import os
 import re
 import logging
+import csv
 
 class FileUtils(object):
 
@@ -35,6 +36,7 @@ class FileUtils(object):
                 return True
             else:
                 return False
+
 
 class SolrUtils(object):
 
@@ -114,3 +116,19 @@ class MapfileUtils(object):
             return True
         else:
             return False
+
+    @classmethod
+    def parse_csv_to_list(cks, filepath, fieldnames, delimiter):
+
+        mapfile_list = list()
+
+        try:
+            with open(filepath, encoding='utf-8') as csv_file:
+                csv_reader = csv.DictReader(csv_file, fieldnames, delimiter)  
+                
+                mapfile_list = [row for row in csv_reader]
+            
+            return mapfile_list
+
+        except IOError as e:
+            raise e
