@@ -1,6 +1,6 @@
 # SPECIFIC FOR THIS PROJECT
 mapfiles_test/
-
+*.log.*
 # no config files
 *.ini
 
