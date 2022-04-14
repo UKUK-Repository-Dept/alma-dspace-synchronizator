@@ -43,7 +43,7 @@ class SolrUtils(object):
     __log = logging.getLogger(__name__)
 
     @classmethod
-    def preproces_doc_ids(cls, doc, main_id_field_name, id_field_names: list):
+    def preproces_doc_fields(cls, doc, main_id_field_name, id_field_names: list):
         
         for field_name in id_field_names:
             if field_name not in doc.keys():
@@ -118,7 +118,7 @@ class MapfileUtils(object):
             return False
 
     @classmethod
-    def parse_csv_to_list(cks, filepath, fieldnames, delimiter):
+    def parse_csv_to_list(cls, filepath, fieldnames, delimiter):
 
         mapfile_list = list()
 
@@ -132,3 +132,32 @@ class MapfileUtils(object):
 
         except IOError as e:
             raise e
+
+class ReportingUtils(object):
+
+    __log = logging.getLogger(__name__)
+
+    @classmethod
+    def create_doc_error_message(cls, doc, reported_fields, report_type='csv'):
+
+        cls.__log.info('Create error report message for doc {}'.format(doc))
+        if report_type is not 'csv':
+            raise NotImplementedError
+        
+        else:
+            message = str
+            separator = ';'
+            for field in reported_fields:
+                if doc[field] is None:
+                    separator.join('')
+                else:
+                    separator.join(str(doc[field]))
+            
+            separator.join(doc['reason'])
+        
+        message = separator
+        cls.__log.debug("Report message: {}".format(message))
+
+        return message
+        
+
