@@ -75,7 +75,7 @@ class ReplaceWorkflow(Workflow):
             
 
         SolrUtils.preproces_doc_fields(doc, 'handle', 
-        [str.split(self.config.get('SOLR', 'gathered_fields'))], sep=',')
+        [str.split(self.config.get('SOLR', 'gathered_fields'), sep=',')])
 
         if SolrUtils.old_lis_id_found(doc, self.config.get('LIS', 'old_id_regex'),
         [self.config.get('SOLR','old_id_fieldname'),self.config.get('SOLR', 'new_id_fieldname')]) is False:
