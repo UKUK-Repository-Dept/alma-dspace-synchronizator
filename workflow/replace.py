@@ -1,6 +1,6 @@
 from requests import request
 from . import Workflow
-from utility import FileUtils, SolrUtils, MapfileUtils
+from utility import FileUtils, SolrUtils, MapfileUtils, ReportingUtils
 
 class ReplaceWorkflow(Workflow):
 
@@ -42,14 +42,14 @@ class ReplaceWorkflow(Workflow):
         self.log.info("Gathering valid docs from SOLR.")
         
         # Get total hits
-        total_hits = self.solr.search('(dc.identifier.aleph:* OR dc.identifier.lisID:0*) AND -dc.identifier.lisID:9*', 
-        fl='search.uniqueid,search.resourceid,dc.identifier.aleph,dc.identifier.lisID,handle', sort='search.uniqueid ASC', rows=0)
+        total_hits = self.solr.search(self.config.get('SOLR', 'replace_query'),
+        fl=self.config.get('SOLR','gathered_fields'), sort='search.uniqueid ASC', rows=0)
 
         self.log.info("Found {} docs ".format(total_hits.hits))
         
         # store a solr.search iterator
-        self.gathered_docs = self.solr.search('(dc.identifier.aleph:* OR dc.identifier.lisID:0*) AND -dc.identifier.lisID:9*',
-        fl='search.uniqueid,search.resourceid,dc.identifier.aleph,dc.identifier.lisID,handle', sort='search.uniqueid ASC',
+        self.gathered_docs = self.solr.search(self.config.get('SOLR', 'replace_query'),
+        fl=self.config.get('SOLR','gathered_fields'), sort='search.uniqueid ASC',
         cursorMark='*')
         
         message = "Found {} docs and stored the in {}".format(str(total_hits.hits), type(self.gathered_docs).__name__)
@@ -61,28 +61,30 @@ class ReplaceWorkflow(Workflow):
         self.log.info("Preprocessing SOLR doc {}.".format(doc['handle']))
 
         if SolrUtils.doc_id_count_valid(doc, 
-        [self.config.get('DSPACE','old_id_fieldname'), self.config.get('DSPACE','new_id_fieldname')]) is False:
+        [self.config.get('SOLR','old_id_fieldname'), self.config.get('SOLR','new_id_fieldname')]) is False:
                     
             # add reason to solr doc dict to be used for reporting
             doc['reason'] = 'count_invalid'
             # print(doc['reason'])
             # self.to_report_docs = (doc['search.uniqueid'], doc)
-            message = '{};{};{};{}'.format(doc[self.config.get('DSPACE','old_id_fieldname')],
-            doc[self.config.get('DSPACE','new_id_fieldname')], doc['handle'],doc['reason'])
+            # message = '{};{};{};{}'.format(doc[self.config.get('SOLR','old_id_fieldname')],
+            # doc[self.config.get('SOLR','new_id_fieldname')], doc['handle'],doc['reason'])
+            message = ReportingUtils.create_doc_error_message(doc, self.config.get('WORKFLOW','error_report_fields'))
             raise Exception(message)
             
             
 
-        SolrUtils.preproces_doc_ids(doc, 'handle', 
-        [self.config.get('DSPACE', 'old_id_fieldname'), self.config.get('DSPACE', 'new_id_fieldname')])
+        SolrUtils.preproces_doc_fields(doc, 'handle', 
+        [str.split(self.config.get('SOLR', 'gathered_fields'))], sep=',')
 
         if SolrUtils.old_lis_id_found(doc, self.config.get('LIS', 'old_id_regex'),
-        [self.config.get('DSPACE','old_id_fieldname'),self.config.get('DSPACE', 'new_id_fieldname')]) is False:
+        [self.config.get('SOLR','old_id_fieldname'),self.config.get('SOLR', 'new_id_fieldname')]) is False:
             
             doc['reason'] = 'invalid_id_in_solr'
             # print(doc['reason'])
-            message = '{};{};{};{}'.format(doc[self.config.get('DSPACE','old_id_fieldname')],
-            doc[self.config.get('DSPACE','new_id_fieldname')], doc['handle'],doc['reason'])
+            # message = '{};{};{};{}'.format(doc[self.config.get('SOLR','old_id_fieldname')],
+            # doc[self.config.get('SOLR','new_id_fieldname')], doc['handle'],doc['reason'])
+            message = ReportingUtils.create_doc_error_message(doc, self.config.get('WORKFLOW','error_report_fields'))
 
             raise Exception(message)
         
@@ -98,7 +100,7 @@ class ReplaceWorkflow(Workflow):
         self.config.get('LIS','new_id_name'), doc['handle']))
 
         old_id = SolrUtils.get_old_id(doc, 
-        [self.config.get('DSPACE', 'old_id_fieldname'), self.config.get('DSPACE','new_id_fieldname')])
+        [self.config.get('SOLR', 'old_id_fieldname'), self.config.get('SOLR','new_id_fieldname')])
         
         self.log.info("Doc {} has old_id: {}. Looking for it in mapfile.".format(doc['handle'], old_id))
 
@@ -112,11 +114,11 @@ class ReplaceWorkflow(Workflow):
                 self.log.info("Doc {} found in mapfile line {} / {}".format(doc['handle'], j, len(self.mapfile_csv_list)))
                 
                 # set SOLR doc 'dc.identifier.lisID' to a value of alma_id in that row
-                doc[self.config.get('DSPACE', 'new_id_fieldname')] = row[self.config.get('LIS','new_id_name')]
+                doc[self.config.get('SOLR', 'new_id_fieldname')] = row[self.config.get('LIS','new_id_name')]
                 
                 self.log.info("Doc {}: {}: {} replaced by {}: {}\n".format(doc['handle'], 
                 self.config.get('LIS','old_id_name'), old_id, self.config.get('LIS','new_id_name'), 
-                doc[self.config.get('DSPACE','new_id_fieldname')]))
+                doc[self.config.get('SOLR','new_id_fieldname')]))
                 
                 # when correct alma_id is assigned to doc['dc.identifier.lisID], remove that item from mapfile list -> speed up lookup of subsequent items
                 self.mapfile_csv_list.pop(j)
@@ -128,14 +130,15 @@ class ReplaceWorkflow(Workflow):
         if id_found_in_mapfile is False:
             doc['reason'] = 'not_found_in_mapfile'
             
-            message = '{};{};{};{}'.format(doc[self.config.get('DSPACE','old_id_fieldname')],
-            doc[self.config.get('DSPACE','new_id_fieldname')], doc['handle'],doc['reason'])
+            # message = '{};{};{};{}'.format(doc[self.config.get('SOLR','old_id_fieldname')],
+            # doc[self.config.get('SOLR','new_id_fieldname')], doc['handle'],doc['reason'])
+            message = ReportingUtils.create_doc_error_message(doc, self.config.get('WORKFLOW','error_report_fields'))
             
             raise ValueError(message)
         
         message = "Doc {}: old id {} {} replaced by new id {} {}".format(doc['handle'], 
         self.config.get('LIS','old_id_name'), old_id, self.config.get('LIS', 'new_id_name'), 
-        doc[self.config.get('DSPACE','new_id_fieldname')])
+        doc[self.config.get('SOLR','new_id_fieldname')])
         
         return message 
 
@@ -150,8 +153,9 @@ class ReplaceWorkflow(Workflow):
         if doc['request_url'] is None:
             doc['reason'] = 'request_url_not_created'
             
-            message = '{};{};{};{}'.format(doc[self.config.get('DSPACE','old_id_fieldname')],
-            doc[self.config.get('DSPACE','new_id_fieldname')], doc['handle'],doc['reason'])
+            # message = '{};{};{};{}'.format(doc[self.config.get('SOLR','old_id_fieldname')],
+            # doc[self.config.get('SOLR','new_id_fieldname')], doc['handle'],doc['reason'])
+            message = ReportingUtils.create_doc_error_message(doc, self.config.get('WORKFLOW','error_report_fields'))
 
             raise ValueError(message)
         
@@ -172,7 +176,8 @@ class ReplaceWorkflow(Workflow):
         except Exception as e:
             doc['reason'] = 'update_failed'
             
-            message = '{};{};{};{}'.format(doc[self.config.get('DSPACE','old_id_fieldname')],
-            doc[self.config.get('DSPACE','new_id_fieldname')], doc['handle'],doc['reason'])
+            # message = '{};{};{};{}'.format(doc[self.config.get('SOLR','old_id_fieldname')],
+            # doc[self.config.get('SOLR','new_id_fieldname')], doc['handle'],doc['reason'])
+            message = ReportingUtils.create_doc_error_message(doc, self.config.get('WORKFLOW','error_report_fields'))
             
             raise Exception(message)
