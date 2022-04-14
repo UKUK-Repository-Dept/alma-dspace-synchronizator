@@ -90,7 +90,7 @@ class WorkflowCreator(ABC):
                 self.__log.info(result)
             except Exception as e:
                 workflow.log.error(e)
-                self.__log.error(e, exc_info=True)
+                self.__log.error("Doc {}:\t{}.".format(doc['handle'],doc['reason']), exc_info=True)
                 continue
 
             try:
@@ -98,7 +98,7 @@ class WorkflowCreator(ABC):
                 self.__log.info(result)
             except Exception as e:
                 workflow.log.error(e)
-                self.__log.error(e, exc_info=True)
+                self.__log.error("Doc {}:\t{}.".format(doc['handle'],doc['reason']), exc_info=True)
                 continue
 
             try:
@@ -106,7 +106,7 @@ class WorkflowCreator(ABC):
                 self.__log.info(result)
             except Exception as e:
                 workflow.log.error(e)
-                self.__log.error(e, exc_info=True)
+                self.__log.error("Doc {}:\t{}.".format(doc['handle'],doc['reason']), exc_info=True)
                 continue
 
             try:
@@ -114,7 +114,7 @@ class WorkflowCreator(ABC):
                 self.__log.info(result)
             except Exception as e:
                 workflow.log.error(e)
-                self.__log.error(e, exc_info=True)
+                self.__log.error("Doc {}:\t{}.".format(doc['handle'],doc['reason']), exc_info=True)
                 continue
 
             sleep(1)
