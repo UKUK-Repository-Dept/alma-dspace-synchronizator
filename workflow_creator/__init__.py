@@ -119,6 +119,6 @@ class WorkflowCreator(ABC):
 
             sleep(1)
 
-            
+        message = "Processed {} docs in {}".format(str(found), str(workflow.__class__.__name__))
         
-        return "Processed " + str(found) + " docs in " + str(workflow.__class__.__name__)
+        return message
