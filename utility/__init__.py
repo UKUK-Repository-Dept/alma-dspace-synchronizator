@@ -143,7 +143,7 @@ class ReportingUtils(object):
     def create_doc_error_message(cls, doc, reported_fields, report_type='csv'):
 
         cls.__log.info('Create error report message for doc {}'.format(doc))
-        if report_type is not 'csv':
+        if report_type != 'csv':
             raise NotImplementedError
         
         else:
