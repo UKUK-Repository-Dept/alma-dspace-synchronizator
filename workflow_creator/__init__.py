@@ -18,15 +18,15 @@ class WorkflowCreator(ABC):
     implementation of this method.
     """
 
-    def __init__(self, ds_api: ds_api, ds_solr: ds_solr, config: ConfigParser, args : argparse) -> None:
+    def __init__(self, ds_api: ds_api, ds_solr: ds_solr, wf_config: ConfigParser, args : argparse) -> None:
         self.__ds_api = ds_api
         self.__ds_solr = ds_solr
-        self.__config = config
+        self.__config = wf_config
         self.__args = args
-        self.__log = logging.getLogger(__name__)
+        self.__log = __log = logging.getLogger(__name__)
 
     @abstractmethod
-    def factory_method(self, ds_api, ds_solr, config, args) -> Workflow:
+    def factory_method(self, ds_api: ds_api, ds_solr: ds_solr, wf_config : ConfigParser, args: argparse) -> Workflow:
         """
         Note that the Creator may also provide some default implementation of
         the factory method.
