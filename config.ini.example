@@ -1,26 +1,11 @@
+# APP CONFIG
+
 [GENERAL]
-workflow_type=replace
+workflows=replace,add_missing
 
-[MAPFILE]
-location=[/path/to/mapfile]
-# custom fieldnames for columns in a mapfile
-# expects a list, but can have only one value
-fieldnames=aleph_id,alma_id,did
-
-[LIS]
-# regular expression for matching old ID
-old_id_regex=\d{9}
-# name of the old id, this label will be used as a key for accesing the old ID value by the program
-# used for logging as well
-old_id_name=aleph_id
-# name of the new id, this label will be used as a key for accesing the old ID value by the program
-# used for logging as well
-new_id_name=alma_id
-
-[DSPACE]
-# metadata field in which the old ID is stored in the DSpace repository
-# metadata field has to exist in DSpace metadata registry and therefore in SOLR as well
-old_id_fieldname=dc.identifier.aleph
-# metadata field in which the new ID is stored in the DSpace repository
-# metadata field has to exist in DSpace metadata registry and therefore in SOLR as well
-new_id_fieldname=dc.identifier.lisID
+[WF_CONFIGS]
+# add relative path to the workflow config file, starting from the main script location
+# e.g.: if workflow config file in in the same directory as main script (alma-dspace-synchronizer.py), write
+# just its filename
+replace=replace_wf_config.ini
+add_missing=add_missing_wf_config.ini
