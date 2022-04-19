@@ -1,3 +1,9 @@
+# #!/usr/bin/env python
+# -*- coding: utf-8 -*-
+# vim: set syntax=python:
+#########################
+# (c) JR, 2022          #
+#########################
 from configparser import ConfigParser, ExtendedInterpolation
 import requests
 import json

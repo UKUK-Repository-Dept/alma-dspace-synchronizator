@@ -1,3 +1,9 @@
+# #!/usr/bin/env python
+# -*- coding: utf-8 -*-
+# vim: set syntax=python:
+#########################
+# (c) JR, 2022          #
+#########################
 from . import WorkflowCreator
 from workflow import Workflow
 from workflow.replace import ReplaceWorkflow
