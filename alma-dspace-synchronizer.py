@@ -6,11 +6,17 @@
 #########################
 from __future__ import annotations
 import argparse
+from lib2to3.pgen2.token import LBRACE
 import dspace_api as ds_api
 import dspace_solr as ds_solr
 import logging
 import logging.config
+import twisted.logger
+import os
 
+from twisted.internet import reactor
+from twisted.internet import task
+from twisted.python import log as twisted_log
 from workflow_creator.replace_wf_creator import ReplaceWorkflowCreator
 from workflow_creator.add_missing_wf_creator import AddMissingWorkflowCreator
 from configparser import ConfigParser, ExtendedInterpolation
@@ -23,7 +29,7 @@ if typing:
 my_parser = argparse.ArgumentParser(description="Synchronize DSpace ALAM ID to DSpace")
 
 # Add arguments
-my_parser.add_argument('-m', '--mode', metavar='mode', type=int, help="[1 - replace Aleph SYSNO | 2 - add missing ALMA ID]", required=True)
+my_parser.add_argument('-m', '--mode', metavar='mode', type=str, help="[1 - replace Aleph SYSNO | 2 - add missing ALMA ID]", required=True)
 my_parser.add_argument('-c', '--config', metavar='config_path', type=str, help="path to config file")
 my_parser.add_argument('-s', '--settings', metavar='settings', type=str, help="[iterative | complete]")
 my_parser.add_argument('-l', "--limit", metavar='limit', type=int, help=['int - set maximum number of processed docs'])
@@ -31,9 +37,9 @@ my_parser.add_argument('-l', "--limit", metavar='limit', type=int, help=['int - 
 def do_test(dsapi: dspace_api, solr: dspace_solr, config, args: argparse):
 
     try:
-        if args.mode == 1:
+        if args.mode == 'replace':
             log.info("Mode is set to 1 - replace Aleph sysno")
-        elif args.mode == 2:
+        elif args.mode == 'add_missing':
             log.info("Mode is set to 2 - add missing ALMA ID")
         else:
             raise Exception("Invalid value of argument -m (mode): " + args.mode)
@@ -44,10 +50,27 @@ def do_test(dsapi: dspace_api, solr: dspace_solr, config, args: argparse):
     try:
         if args.config is None:
             log.info("No custom config file provided. Using default config.")
-            app_config.read('./config.ini')
+            log.info("Config path: {}".format(os.path.join(os.path.dirname(__file__),'config.ini')))
+            app_config.read(os.path.join(os.path.join(os.path.dirname(__file__)),'config.ini'))
         else:
             log.info("Using custom config at {}".format(args.config))
             app_config.read(args.config)
+    except Exception as e:
+        log.error(e, exc_info=True)
+        raise e
+
+    # check if app config is valid
+    try:
+        log.info("Checking if app config is valid.")
+        workflow_names = str(app_config.get('GENERAL','workflows')).split(sep=',')
+
+        for name in workflow_names:
+            if app_config.has_option('WF_CONFIGS', name) is False:
+                raise KeyError("Key {} not in 'WF_CONFIGS section of the app_config".format(name))
+        
+        if app_config.has_option('WF_CONFIGS', args.mode) is False:
+            raise ValueError("Mode (-m) '{}' not in 'WF_CONFIGS section of the app_config".format(args.mode))
+
     except Exception as e:
         log.error(e, exc_info=True)
         raise e
@@ -62,11 +85,6 @@ def do_test(dsapi: dspace_api, solr: dspace_solr, config, args: argparse):
         log.error(e, exc_info=True)
         raise e
 
-    try:
-        log.debug("Testing app config: {}".format(config.get('MAPFILE','location')))
-    except Exception as e:
-        log.error(e, exc_info=True)
-        raise e
     
     try:
         log.debug("Testing DSpace API: JSESSIONID = {}".format(dsapi.cookie))
@@ -87,15 +105,75 @@ def do_test(dsapi: dspace_api, solr: dspace_solr, config, args: argparse):
     except Exception as e:
         log.error(e, exc_info=True)
         raise e
-    
 
-def do_start(workflow_creator : workflow_creator):
+def cbLoopDone(result):
+    log.info(result)
 
-    print(workflow_creator.run_workflow())
+def ebLoopFailed(failure):
+    log.error(failure, exc_info=True)
+    reactor.stop()
+    raise e
 
-    
+def cbRunDone(result):
+    log.info(result)
+    reactor.stop()
+
+def cbRunFailed(failure):
+    log.error(failure, exc_info=True)
+    reactor.stop()
+
+def do_start(workflow_creator : workflow_creator, config : ConfigParser, should_loop=False, interval=None):
+
+    # create looping task
+    if should_loop is False:
+        try:
+            deferred = task.deferLater(reactor, 0, workflow_creator.run_workflow)
+            deferred.addCallback(cbRunDone)
+            deferred.addErrback(cbRunFailed)
+
+        except Exception as e:
+            raise e
+    else:
+        log.info("Interval: {}".format(interval))
+        if interval == 'None':
+            raise Exception("'should_loop' is set to {} - 'interval' cannot be {}".format(should_loop, interval))
+        
+        try:
+            loop = task.LoopingCall(workflow_creator.run_workflow)
+            loopDeferred = loop.start(float(interval))
+            loopDeferred.addCallback(cbLoopDone)
+            loopDeferred.addErrback(ebLoopFailed)
+        except Exception as e:
+            logging.exception(e)
+            raise e
+
+    reactor.run()
+        
+
+def parse_wf_config(wf_config_path):
+
+    config_path = os.path.join(os.path.dirname(__file__),wf_config_path)
+    # try to parse workflow config file
+    # and store it for later use in workflow
+    wf_config = ConfigParser(interpolation=ExtendedInterpolation())
+
+    try:
+        wf_config.read(config_path)
+    except Exception as e:
+        logging.exception(e)
+        raise e
+
+    return wf_config
 
 if __name__ == '__main__':
+
+    # twisted log observer
+    try:
+        twisted.logger.STDLibLogObserver(__name__)
+        # observer = twisted_log.PythonLoggingObserver('__name__')
+    except Exception as e:
+        logging.exception(e)
+        raise e
 
     # create logger
     try:
@@ -106,13 +184,13 @@ if __name__ == '__main__':
         logging.exception(e)
         raise e
 
+    
+
     # create handlers
 
     args = my_parser.parse_args()
 
     app_config = ConfigParser(interpolation=ExtendedInterpolation())
-
-    
 
     try:
         do_test(ds_api, ds_solr, app_config, args)
@@ -123,10 +201,14 @@ if __name__ == '__main__':
     try:
         action = do_start
 
-        if args.mode == 1:
-            action(ReplaceWorkflowCreator(ds_api, ds_solr, app_config, args))
-        elif args.mode == 2:
-            action(AddMissingWorkflowCreator(ds_api, ds_solr, app_config, args))
+        wf_config = parse_wf_config(app_config.get('WF_CONFIGS', args.mode))
+        loop = wf_config.get('GENERAL','loop')
+        interval = wf_config.get('GENERAL','interval')
+        
+        if args.mode == 'replace':  
+            action(ReplaceWorkflowCreator(ds_api, ds_solr, wf_config, args), app_config, loop, interval)
+        elif args.mode == 'add_missing':
+            action(AddMissingWorkflowCreator(ds_api, ds_solr, wf_config, args), app_config, loop, interval)
         else:
             log.error("Invalid value of argument -m (mode):" + args.mode, exc_info=True)
             raise Exception ("Invalid value of argument -m (mode): " + args.mode)
