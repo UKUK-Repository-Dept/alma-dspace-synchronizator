@@ -6,7 +6,7 @@ constantly==15.1.0
 hyperlink==21.0.0
 idna==3.3
 incremental==21.3.0
-pyjq==2.5.2
+pyjq
 pysolr==3.9.0
 requests==2.27.1
 six==1.16.0
