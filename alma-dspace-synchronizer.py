@@ -202,7 +202,7 @@ if __name__ == '__main__':
         action = do_start
 
         wf_config = parse_wf_config(app_config.get('WF_CONFIGS', args.mode))
-        loop = wf_config.get('GENERAL','loop')
+        loop = wf_config.getboolean('GENERAL','loop')
         interval = wf_config.get('GENERAL','interval')
         
         if args.mode == 'replace':  
