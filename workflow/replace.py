@@ -37,7 +37,7 @@ class ReplaceWorkflow(Workflow):
 
         # parse csv to list        
         self.mapfile_csv_list = MapfileUtils.parse_csv_to_list(self.config.get('MAPFILE','location'), 
-        self.mapfile_csv_fieldnames, delimiter=';')
+        fieldnames=self.mapfile_csv_fieldnames, delimiter=';')
 
         message = "Found mapfile on path {}: Items in path: {}".format(self.config.get("MAPFILE", "location"), 
         str(len(self.mapfile_csv_list)))
