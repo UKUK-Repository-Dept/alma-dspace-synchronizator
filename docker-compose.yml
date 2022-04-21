@@ -4,17 +4,22 @@ services:
     build:
       context: .
       args:
-        UID: ${UID}
-        GID: ${USER_GID}
-        USERNAME: synchronizator
-        GROUPNAME: synchronizator
+        - UID=${USER_UID} # USER_UID ENV variable has to be set
+        - GID=${USER_GID} # USER_GID ENV variable has to be set
+        - USERNAME=synchronizator
+        - GROUPNAME=synchronizator
     tty: true
     # dockerfile: Dockerfile
-    user: "${UID}:${USER_GID}"
+    user: "${USER_UID}:${USER_GID}"
     volumes:
       - .:/app
       - /var/log/alma-dspace-synchronizer:/app/logs
       - ./config:/app/config
+      # - [path_to_your_input-output/dir]:/app/input-output 
+      # define more paths and mounts if necessary and change config file accordingly
+
+    # network_mode: "host" # use when no direct connection to SOLR exists from your docker server
+    # otherwise, use networks (mutualy exlusive with network_mode, I think)
     networks:
       - alma-ds-network
 
