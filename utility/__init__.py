@@ -117,9 +117,9 @@ class MapfileUtils(object):
     @classmethod
     def find_id_in_column(cls, row, column_name, doc_identifier) -> bool:
         
-        
+        # print("doc_identifier: {} row[{}]: {}".format(doc_identifier, column_name, row[column_name]))
         if row[column_name] == doc_identifier: # identifier in mapfile list is the same as identifier in SOLR doc
-            cls.__log.info("{} found: {}".format(column_name, row['aleph_id']))
+            cls.__log.info("{} found: {}".format(column_name, row[column_name]))
             
             return True
         else:
@@ -131,11 +131,19 @@ class MapfileUtils(object):
         mapfile_list = list()
 
         try:
-            with open(filepath, encoding='utf-8') as csv_file:
-                csv_reader = csv.DictReader(csv_file, fieldnames, delimiter)  
+            with open(filepath, encoding='utf-8', newline='') as csv_file:
                 
-                mapfile_list = [row for row in csv_reader]
-            
+                csv_reader = csv.reader(csv_file, delimiter=delimiter)
+                
+                for row in csv_reader:
+                    row_dict = dict()
+                    fieldname_count = 0
+                    for fieldname in fieldnames:
+                        row_dict.update({fieldname: row[fieldname_count]})
+                        
+                        fieldname_count += 1
+                    mapfile_list.append(row_dict)
+
             return mapfile_list
 
         except IOError as e:
