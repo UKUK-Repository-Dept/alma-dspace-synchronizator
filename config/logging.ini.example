@@ -1,5 +1,5 @@
 [loggers]
-keys=root,workflow,error_file_log
+keys=root,workflow,errorFileLog
 
 [handlers]
 keys=consoleHandler,fileHandler,errorFileErrorHandler
@@ -17,10 +17,10 @@ handlers=consoleHandler,fileHandler
 qualname=workflow
 propagate=0
 
-[logger_error_file_log]
+[logger_errorFileLog]
 level=ERROR
 handlers=errorFileErrorHandler
-qualname=error_file_log
+qualname=errorFileLog
 propagate=0
 
 [handler_consoleHandler]
