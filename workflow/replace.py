@@ -138,7 +138,7 @@ class ReplaceWorkflow(Workflow):
         doc[self.config.get('SOLR','new_id_fieldname')])
         
         return message 
-
+    
     def prepare_record_updates(self, doc):
 
         self.log.info("Doc {}: Preparing record update url and payload for DSpace.".format(doc['handle']))
@@ -159,7 +159,6 @@ class ReplaceWorkflow(Workflow):
 
         return message
 
-    
     def update_dspace_records(self, doc):
         
         self.log.info("Doc {}: Updating DSpace record.".format(doc['handle']))
