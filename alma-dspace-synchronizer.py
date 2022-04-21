@@ -49,9 +49,16 @@ def do_test(dsapi: dspace_api, solr: dspace_solr, config, args: argparse):
 
     try:
         if args.config is None:
+
+            log.debug("ARGS - config: {}".format(args.config))
+            app_config_path = os.path.join(os.path.join(os.path.dirname(__file__)),'config','config.ini')
+            
+            log.debug("APP CONFIG PATH: {}".format(str(app_config_path)))
             log.info("No custom config file provided. Using default config.")
-            log.info("Config path: {}".format(os.path.join(os.path.dirname(__file__),'config.ini')))
-            app_config.read(os.path.join(os.path.join(os.path.dirname(__file__)),'config.ini'))
+            
+            log.debug("Config path: {}".format(app_config_path))
+            
+            app_config.read(app_config_path)
         else:
             log.info("Using custom config at {}".format(args.config))
             app_config.read(args.config)
@@ -151,14 +158,18 @@ def do_start(workflow_creator : workflow_creator, config : ConfigParser, should_
         
 
 def parse_wf_config(wf_config_path):
-
-    config_path = os.path.join(os.path.dirname(__file__),wf_config_path)
+    log.debug("parse_wf_config param value: {}".format(wf_config_path))
+    log.debug("Current path: {}".format(str(os.path.dirname(os.path.abspath(__file__)))))
+    
+    wf_config_path = os.path.join(os.path.dirname(__file__), 'config', 'workflow', wf_config_path)
+    
+    log.debug("WF CONFIG PATH - FUCK: {}".format(str(wf_config_path)))
     # try to parse workflow config file
     # and store it for later use in workflow
     wf_config = ConfigParser(interpolation=ExtendedInterpolation())
 
     try:
-        wf_config.read(config_path)
+        wf_config.read(wf_config_path)
     except Exception as e:
         logging.exception(e)
         raise e
@@ -177,7 +188,7 @@ if __name__ == '__main__':
 
     # create logger
     try:
-        logging.config.fileConfig(fname='logging.ini', disable_existing_loggers=False)
+        logging.config.fileConfig(fname=os.path.join(os.path.dirname(__file__),'config', 'logging.ini'), disable_existing_loggers=False)
         log = logging.getLogger(__name__)
         
     except Exception as e:
@@ -201,7 +212,13 @@ if __name__ == '__main__':
     try:
         action = do_start
 
+        log.debug("APP CONFIG BEFORE START {}".format(app_config))
+        log.debug("ARGS.MODE:", args.mode)
+        
+        log.debug("WF_WORKFLOWS IN CONFIG.INI: {}".format(app_config.get("WF_CONFIGS", args.mode)))
+
         wf_config = parse_wf_config(app_config.get('WF_CONFIGS', args.mode))
+        
         loop = wf_config.getboolean('GENERAL','loop')
         interval = wf_config.get('GENERAL','interval')
         
