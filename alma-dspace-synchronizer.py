@@ -190,7 +190,6 @@ if __name__ == '__main__':
     try:
         logging.config.fileConfig(fname=os.path.join(os.path.dirname(__file__),'config', 'logging.ini'), disable_existing_loggers=False)
         log = logging.getLogger(__name__)
-        
     except Exception as e:
         logging.exception(e)
         raise e
@@ -211,11 +210,14 @@ if __name__ == '__main__':
 
     try:
         action = do_start
-
-        log.debug("APP CONFIG BEFORE START {}".format(app_config))
-        log.debug("ARGS.MODE:", args.mode)
+        print("LOG", log)
+        #log.debug("APP CONFIG BEFORE START {}".format(app_config))
+        print("APP CONFIG BEFORE START {}".format(app_config))
+        #log.debug("ARGS.MODE:", args.mode)
+        print("ARGS.MODE:", args.mode)
         
-        log.debug("WF_WORKFLOWS IN CONFIG.INI: {}".format(app_config.get("WF_CONFIGS", args.mode)))
+        #log.debug("WF_WORKFLOWS IN CONFIG.INI: {}".format(app_config.get("WF_CONFIGS", args.mode)))
+        print("WF_WORKFLOWS IN CONFIG.INI: {}".format(app_config.get("WF_CONFIGS", args.mode)))
 
         wf_config = parse_wf_config(app_config.get('WF_CONFIGS', args.mode))
         
