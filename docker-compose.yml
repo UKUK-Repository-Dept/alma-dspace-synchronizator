@@ -1,0 +1,23 @@
+version: "3.3"
+services:
+  alma-dspace-synchronizer:
+    build:
+      context: .
+      args:
+        UID: ${UID}
+        GID: ${USER_GID}
+        USERNAME: synchronizator
+        GROUPNAME: synchronizator
+    tty: true
+    # dockerfile: Dockerfile
+    user: "${UID}:${USER_GID}"
+    volumes:
+      - .:/app
+      - /var/log/alma-dspace-synchronizer:/app/logs
+      - ./config:/app/config
+    networks:
+      - alma-ds-network
+
+networks:
+  alma-ds-network:
+    driver: bridge
