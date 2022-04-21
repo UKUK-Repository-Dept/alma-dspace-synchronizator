@@ -30,6 +30,7 @@ class WorkflowCreator(ABC):
         self.__config = wf_config
         self.__args = args
         self.__log = logging.getLogger(__name__)
+        self.__error_report_log = logging.getLogger('error_file_log')
 
     @abstractmethod
     def factory_method(self, ds_api: ds_api, ds_solr: ds_solr, wf_config : ConfigParser, args: argparse) -> Workflow:
@@ -95,7 +96,7 @@ class WorkflowCreator(ABC):
                 result = workflow.preprocess_solr_docs(doc)
                 self.__log.info(result)
             except Exception as e:
-                workflow.log.error(e)
+                self.__error_report_log.error(e)
                 self.__log.error("Doc {}:\t{}.".format(doc['handle'],doc['reason']), exc_info=True)
                 continue
 
@@ -103,7 +104,7 @@ class WorkflowCreator(ABC):
                 result = workflow.compare_solr_to_mapfile(doc)
                 self.__log.info(result)
             except Exception as e:
-                workflow.log.error(e)
+                self.__error_report_log.error(e)
                 self.__log.error("Doc {}:\t{}.".format(doc['handle'],doc['reason']), exc_info=True)
                 continue
 
@@ -111,7 +112,7 @@ class WorkflowCreator(ABC):
                 result = workflow.prepare_record_updates(doc)
                 self.__log.info(result)
             except Exception as e:
-                workflow.log.error(e)
+                self.__error_report_log.error(e)
                 self.__log.error("Doc {}:\t{}.".format(doc['handle'],doc['reason']), exc_info=True)
                 continue
 
@@ -119,7 +120,7 @@ class WorkflowCreator(ABC):
                 result = workflow.update_dspace_records(doc)
                 self.__log.info(result)
             except Exception as e:
-                workflow.log.error(e)
+                self.__error_report_log.error(e)
                 self.__log.error("Doc {}:\t{}.".format(doc['handle'],doc['reason']), exc_info=True)
                 continue
 
