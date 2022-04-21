@@ -29,7 +29,7 @@ class WorkflowCreator(ABC):
         self.__ds_solr = ds_solr
         self.__config = wf_config
         self.__args = args
-        self.__log = __log = logging.getLogger(__name__)
+        self.__log = logging.getLogger(__name__)
 
     @abstractmethod
     def factory_method(self, ds_api: ds_api, ds_solr: ds_solr, wf_config : ConfigParser, args: argparse) -> Workflow:
