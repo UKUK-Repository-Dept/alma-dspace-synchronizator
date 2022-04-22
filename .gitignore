@@ -3,6 +3,9 @@ mapfiles_test/
 *.log.*
 # no config files
 *.ini
+# docker + compose
+Dockerfile
+docker-compose.yml
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
