@@ -32,7 +32,7 @@ my_parser = argparse.ArgumentParser(description="Synchronize DSpace ALAM ID to D
 my_parser.add_argument('-m', '--mode', metavar='mode', type=str, help="[1 - replace Aleph SYSNO | 2 - add missing ALMA ID]", required=True)
 my_parser.add_argument('-c', '--config', metavar='config_path', type=str, help="path to config file")
 my_parser.add_argument('-s', '--settings', metavar='settings', type=str, help="[iterative | complete]")
-my_parser.add_argument('-l', "--limit", metavar='limit', type=int, help=['int - set maximum number of processed docs'])
+my_parser.add_argument('-l', "--limit", metavar='limit', type=int, help=['int - set maximum number of processed docs'], required=False)
 
 def do_test(dsapi: dspace_api, solr: dspace_solr, config, args: argparse):
 
