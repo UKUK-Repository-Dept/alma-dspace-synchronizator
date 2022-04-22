@@ -25,8 +25,9 @@ RUN dnf groupinstall --refresh -y \
 
 RUN pip install --upgrade pip && pip install wheel
 
-# RUN git clone https://github.com/UKUK-Repository-Dept/alma-dspace-synchronizator.git /app
-COPY . /app
+# Dockerfile expects to fined app code in './app' directory relative to its location
+# clone oficial repo or your fork in to ./app folder first
+COPY ./app /app
 
 RUN groupadd --gid $GID $GROUPNAME \
     && useradd -r --uid ${UID} --gid $GID -m $USERNAME \
