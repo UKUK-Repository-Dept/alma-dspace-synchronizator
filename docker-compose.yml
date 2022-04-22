@@ -1,28 +1,36 @@
+# Production
+# all variables used are defined in .env file
 version: "3.3"
 services:
-  alma-dspace-synchronizer:
+  synchronizator:
     build:
-      context: .
+      context: ${BUILD_CONTEXT} # path to the folder with your Dockerfile
+      dockerfile: Dockerfile.prod # name of the Dockerfile in the context folder 
       args:
-        - UID=${USER_UID} # USER_UID ENV variable has to be set
-        - GID=${USER_GID} # USER_GID ENV variable has to be set
-        - USERNAME=synchronizator
-        - GROUPNAME=synchronizator
-    tty: true
-    # dockerfile: Dockerfile
-    user: "${USER_UID}:${USER_GID}"
-    volumes:
-      - .:/app
-      - /var/log/alma-dspace-synchronizer:/app/logs
-      - ./config:/app/config
-      # - [path_to_your_input-output/dir]:/app/input-output 
-      # define more paths and mounts if necessary and change config file accordingly
-
-    # network_mode: "host" # use when no direct connection to SOLR exists from your docker server
-    # otherwise, use networks (mutualy exlusive with network_mode, I think)
+        - UID=${USER_UID} # set container user to some ID
+        - GID=${USER_GID} # set container user group to some ID
+        - USERNAME=${USERNAME} # give user in container a name
+        - GROUPNAME=${GROUPNAME} # give user group in container a name
+        - PROJECT_PATH=${PROJECT_PATH}  # set path to where the app code is located. Will be used to copy the app code
+                                        # inside the container
+    image: ukuk-repo-dept/alma-dspace-synchronizator # set a name for the built image
+    environment: # set environment variables for the container
+      - MODE=${MODE}  # used to set mode of operation for the processin (replace | add_missing)
+                      # value set in .env file can be replaced by -e when running app in container with `docker-compose run`
+      - LIMIT=${LIMIT}  # used to set maximum limit for documents to be processed
+                        # value set in .env file can be replaced by -e when running app in container with `docker-compose run`
+    user: "${USER_UID}:${USER_GID}" # set user in the container
+    volumes: # mount volumes (folder/files from local filesystem) inside the container
+      - ${LOGDIR}:/app/logs # log directory
+      - ${APP_CONFIG}:/app/config/config.ini  # app config file
+      - ${LOG_CONFIG}:/app/config/logging.ini # logging config file
+      - ${WORKFLOW_CONFIG}:/app/config/workflow/  # workflow config file
+      - ${DS_API_CONFIG}:/app/dspace_api/api_config.ini # DSpace API config file
+      - ${DS_SOLR_CONFIG}:/app/dspace_solr/solr_config.ini # DSpace SOLR config file
+      - ${INPUT_OUTPUT_DIR}:/app/input-output # input / output directory
     networks:
-      - alma-ds-network
+      - alma-ds-network # add container to a network
 
-networks:
-  alma-ds-network:
-    driver: bridge
+networks: # define networks
+  alma-ds-network: # defined network used in service definition
+    driver: bridge # set network type
