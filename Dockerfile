@@ -1,10 +1,10 @@
 FROM fedora:34
 
-# default UID
 ARG UID=1000
-ARG GID
+ARG GID=365
 ARG USERNAME
 ARG GROUPNAME
+ARG PROJECT_PATH
 
 LABEL name="ALMA-DSpace Synchronizator" maintainer="Jakub Řihák, Central Library, Charles University, 2022"
 
@@ -25,14 +25,18 @@ RUN dnf groupinstall --refresh -y \
 
 RUN pip install --upgrade pip && pip install wheel
 
-RUN git clone https://github.com/UKUK-Repository-Dept/alma-dspace-synchronizator.git /app
+# RUN git clone https://github.com/UKUK-Repository-Dept/alma-dspace-synchronizator.git /app
+COPY ${PROJECT_PATH} /app
+
+COPY entrypoint.sh /app/entrypoint.sh
 
 RUN groupadd --gid $GID $GROUPNAME \
-    && useradd -r --uid $UID --gid $GID -m $USERNAME \
-    && chown -R $UID:$GID /app
+    && useradd -r --uid ${UID} --gid $GID -m $USERNAME \
+    && chown -R $UID:$GID /app \
+    && chmod +x /app/entrypoint.sh
 
 WORKDIR /app/
 
 RUN pip install -r requirements.txt
 
-ENTRYPOINT [ "/bin/bash" ]
+ENTRYPOINT [ "/app/entrypoint.sh" ]
