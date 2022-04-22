@@ -72,7 +72,8 @@ class ReplaceWorkflow(Workflow):
             # add reason to solr doc dict to be used for reporting
             doc['reason'] = 'count_invalid'
             
-            message = ReportingUtils.create_doc_error_message(doc, self.config.get('WORKFLOW','error_report_fields'))
+            message = ReportingUtils.create_doc_error_message(doc,
+            str.split(self.config.get('WORKFLOW','error_report_fields'), sep=','))
             raise Exception(message) 
 
         self.log.debug(str.split(self.config.get('SOLR', 'gathered_fields'), sep=','))
@@ -84,7 +85,8 @@ class ReplaceWorkflow(Workflow):
             
             doc['reason'] = 'invalid_id_in_solr'
             
-            message = ReportingUtils.create_doc_error_message(doc, self.config.get('WORKFLOW','error_report_fields'))
+            message = ReportingUtils.create_doc_error_message(doc, 
+            str.split(self.config.get('WORKFLOW','error_report_fields'), sep=','))
 
             raise Exception(message)
 
