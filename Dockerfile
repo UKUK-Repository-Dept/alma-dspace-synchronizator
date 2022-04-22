@@ -26,9 +26,7 @@ RUN dnf groupinstall --refresh -y \
 RUN pip install --upgrade pip && pip install wheel
 
 # RUN git clone https://github.com/UKUK-Repository-Dept/alma-dspace-synchronizator.git /app
-COPY ${PROJECT_PATH} /app
-
-COPY entrypoint.sh /app/entrypoint.sh
+COPY . /app
 
 RUN groupadd --gid $GID $GROUPNAME \
     && useradd -r --uid ${UID} --gid $GID -m $USERNAME \
