@@ -76,7 +76,7 @@ def create_request_url(endpoint: str, dso_identifier: str, type: str = 'metadata
 
     return url
 
-def request_update_metadata(request_url: str, metadata_entry):
+def request_update_metadata(request_url: str, metadata_entry, cookie):
 
     headers = {'accept': 'application/json',
             'Content-Type': 'application/json'}
