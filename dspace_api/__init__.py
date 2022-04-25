@@ -8,6 +8,8 @@ from configparser import ConfigParser, ExtendedInterpolation
 import requests
 import json
 
+global cookie
+
 config = ConfigParser(interpolation=ExtendedInterpolation())
 
 try:
@@ -15,7 +17,7 @@ try:
 except Exception as e:
     raise e
 
-cookie = None
+
 
 print("CONFIG: {}".format(config))
 
@@ -85,6 +87,7 @@ def request_update_metadata(request_url: str, metadata_entry):
         if response.status_code == 401:
             try:
                 cookie = login()
+                response = requests.put(cookies = {"JSESSIONID": cookie}, headers=headers,url=request_url, data=metadata_entry)
             except Exception as e:
                 raise e
         else:
