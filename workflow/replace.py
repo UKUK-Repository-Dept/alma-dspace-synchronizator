@@ -166,7 +166,7 @@ class ReplaceWorkflow(Workflow):
         self.log.info("Doc {}: Updating DSpace record.".format(doc['handle']))
         
         try:
-            message = self.dsapi.request_update_metadata(doc['request_url'], doc['metadata_entry'])
+            message = self.dsapi.request_update_metadata(doc['request_url'], doc['metadata_entry'], cookie=self.dsapi.cookie)
 
             return message
         except Exception as e:
