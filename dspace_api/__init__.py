@@ -82,7 +82,13 @@ def request_update_metadata(request_url: str, metadata_entry):
     try:
         response = requests.put(cookies = {"JSESSIONID": cookie}, headers=headers,url=request_url, data=metadata_entry)
     
-        response.raise_for_status()
+        if response.status_code == 401:
+            try:
+                cookie = login()
+            except Exception as e:
+                raise e
+        else:
+            response.raise_for_status()
 
         message = "Status code: {} \t Text: {}".format(response.status_code, response.text)
         return message
