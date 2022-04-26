@@ -224,7 +224,10 @@ if __name__ == '__main__':
         loop = wf_config.getboolean('GENERAL','loop')
         interval = wf_config.get('GENERAL','interval')
         
-        if args.mode == 'replace':  
+        # TODO: Try to pass dspace_api.cookie as a workflow param and store it there
+        # TODO: check if that solves the constant "reconnection" issue when after sending first PUT request
+        # TODO: the next one fails with 401: Unauthorized status and new login is needed
+        if args.mode == 'replace':
             action(ReplaceWorkflowCreator(ds_api, ds_solr, wf_config, args), app_config, loop, interval)
         elif args.mode == 'add_missing':
             action(AddMissingWorkflowCreator(ds_api, ds_solr, wf_config, args), app_config, loop, interval)

@@ -80,7 +80,8 @@ def request_update_metadata(request_url: str, metadata_entry, cookie):
 
     headers = {'accept': 'application/json',
             'Content-Type': 'application/json'}
-
+    # TODO: print value of 'cookie' to check if it becomes unset / None or what
+    # TODO: requests seem to be failing with 401: Unauthorized and new login in needed after each sucessfull PUT request
     try:
         response = requests.put(cookies = {"JSESSIONID": cookie}, headers=headers,url=request_url, data=metadata_entry)
     
